@@ -4362,6 +4362,11 @@ class Scheduler(
                 else:
                     # Merge running_batch with prefill batch
                     running_batch.merge_batch(last_batch)
+                # Admission charged the merged requests their whole max_new_tokens;
+                # as running requests they count at new_token_ratio, so a request
+                # refused at that pass may fit now. Retry this step rather than wait
+                # for a running request to finish, as when the batch was empty.
+                running_batch.batch_is_full = False
 
         # Every step, not only after a merge: overlap merges a prefill's requests
         # before its result finishes them, and update_running_batch may never run.
